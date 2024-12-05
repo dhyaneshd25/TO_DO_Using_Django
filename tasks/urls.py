@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views  # Import views from the tasks app
+from tasks import views  # Import views from the tasks app
 
 urlpatterns = [
     path('', views.index, name='index'),         # Homepage

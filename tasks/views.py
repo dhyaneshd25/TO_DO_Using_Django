@@ -13,19 +13,23 @@ def index(request):
 # View to add a new task
 def add_task(request):
     if request.method == 'POST':
-        title = request.POST['title']
-        description = request.POST['description']
+        # Safely get POST data using get(), not directly accessing with ['key']
+        title = request.POST.get('title')
+        description = request.POST.get('description')
 
-        # Validate the due_date field
+        # Check if required fields are present
+        if not title or not description:
+            return render(request, 'tasks/add_task.html', {'error': 'Title and description are required.'})
+
+        # Validate the due_date field if provided
         due_date = request.POST.get('due_date')
+        task_due_date = None  # Default to None if no due date is provided
         if due_date:
             parsed_date = parse_date(due_date)
             if parsed_date is None:
-                raise ValidationError("Invalid date format. It must be in YYYY-MM-DD format.")
-            # Valid date, set it
+                # If date parsing fails, raise a validation error
+                return render(request, 'tasks/add_task.html', {'error': 'Invalid date format. It must be in YYYY-MM-DD format.'})
             task_due_date = parsed_date
-        else:
-            task_due_date = None  # If no due date is provided, set it to None
 
         # Create the new task
         Task.objects.create(
@@ -33,9 +37,10 @@ def add_task(request):
             description=description,
             due_date=task_due_date
         )
-        return redirect('index')
-    return render(request, 'tasks/add_task.html')
 
+        return redirect('index')  # Redirect to the homepage after adding the task
+
+    return render(request, 'tasks/add_task.html')
 
 def update_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
